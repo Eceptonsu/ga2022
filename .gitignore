@@ -61,8 +61,9 @@ dkms.conf
 *.ipch
 *.suo
 *.db
-src/.vs/ga2022/FileContentIndex/5915df04-921e-452a-b9d3-bfc1068e0da6.vsidx
-src/.vs/ga2022/FileContentIndex/read.lock
-src/.vs/ga2022/v17/Browse.VC.db-shm
-src/.vs/ga2022/v17/Browse.VC.db-wal
-src/.vs/ga2022/v17/Browse.VC.opendb
+*.vsidx
+*.lock
+*.db-shm
+*.db-shm
+*.db-wal
+*.opendb
