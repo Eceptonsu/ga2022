@@ -83,6 +83,7 @@ void heap_destroy(heap_t* heap)
 	while (arena)
 	{
 		arena_t* next = arena->next;
+		tlsf_walk_pool(arena->pool, NULL, NULL);
 		VirtualFree(arena, 0, MEM_RELEASE);
 		arena = next;
 	}
