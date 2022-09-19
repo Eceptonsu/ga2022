@@ -67,3 +67,4 @@ dkms.conf
 *.db-shm
 *.db-wal
 *.opendb
+*.vcxproj
