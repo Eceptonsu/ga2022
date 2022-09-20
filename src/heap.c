@@ -83,7 +83,7 @@ void heap_destroy(heap_t* heap)
 	while (arena)
 	{
 		arena_t* next = arena->next;
-		tlsf_walk_pool(arena->pool, NULL, NULL);
+		tlsf_walk_check_pool(arena->pool, NULL, NULL); // Call the specialized walk function
 		VirtualFree(arena, 0, MEM_RELEASE);
 		arena = next;
 	}

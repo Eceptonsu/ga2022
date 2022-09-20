@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <Windows.h>
 
+#include "dbghelp.h"
 #include "tlsf.h"
 
 #if defined(__cplusplus)
@@ -898,13 +900,71 @@ int tlsf_check(tlsf_t tlsf)
 static void default_walker(void* ptr, size_t size, int used, void* user)
 {
 	(void)user;
-	if (used)
-		printf("Memory leak of size %d bytes with callstack:\n", (unsigned int)size);
+	printf("\t%p %s size: %x (%p)\n", ptr, used ? "used" : "free", (unsigned int)size, block_from_ptr(ptr));
 }
 
 void tlsf_walk_pool(pool_t pool, tlsf_walker walker, void* user)
 {
 	tlsf_walker pool_walker = walker ? walker : default_walker;
+	block_header_t* block =
+		offset_to_block(pool, -(int)block_header_overhead);
+
+	while (block && !block_is_last(block))
+	{
+		pool_walker(
+			block_to_ptr(block),
+			block_size(block),
+			!block_is_free(block),
+			user);
+		block = block_next(block);
+	}
+}
+
+// The specialized walker will print out the the amount of leak and corresponding callstack
+static void leak_callstack_walker(void* ptr, size_t size, int used, void* user)
+{
+	(void)user;
+	if (used) {
+		printf("\nMemory leak of size %d bytes with callstack:\n", (unsigned int)size);
+
+		void* stack[100];
+		unsigned short frames;
+		HANDLE process;
+		DWORD displacement;
+		IMAGEHLP_LINE64* line;
+		IMAGEHLP_SYMBOL64* symbol;
+
+		process = GetCurrentProcess();
+		SymSetOptions(SYMOPT_LOAD_LINES);
+		SymInitialize(process, NULL, TRUE);
+
+		frames = CaptureStackBackTrace(0, 100, stack, NULL);
+		line = (IMAGEHLP_LINE64*) calloc(sizeof(IMAGEHLP_LINE64) + 256 * sizeof(char), 1);
+		symbol = (IMAGEHLP_SYMBOL64*)calloc(sizeof(IMAGEHLP_SYMBOL64) + 256 * sizeof(char), 1);
+		for (unsigned int i = 2; i < (unsigned int) frames-6; i++)
+		{
+			if (line && symbol) {
+				line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+				symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
+				symbol->MaxNameLength = MAX_SYM_NAME;
+
+				SymGetLineFromAddr64(process, (DWORD64)(stack[i]), &displacement, line); // responsible for line number and file name
+				SymGetSymFromAddr64(process, (DWORD64)(stack[i]), 0, symbol); // responsible for the function name
+				printf("[%i] line %i in %s located at %s\n", frames - i - 1, line->LineNumber, symbol->Name, line->FileName);
+			}
+		}
+
+		free(line);
+		free(symbol);
+	}
+}
+
+// The specialized walk function that utilizes a special walker function
+// called leak_callstack_walker which will print out the amount of leak 
+// and the corresponding callstack
+void tlsf_walk_check_pool(pool_t pool, tlsf_walker walker, void* user)
+{
+	tlsf_walker pool_walker = walker ? walker : leak_callstack_walker;
 	block_header_t* block =
 		offset_to_block(pool, -(int)block_header_overhead);
 
