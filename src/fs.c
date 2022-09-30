@@ -4,17 +4,21 @@
 #include "heap.h"
 #include "queue.h"
 #include "thread.h"
+#include "lz4/lz4.h"
 
 #include <string.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+// Insipred by Johnny L 
 typedef struct fs_t
 {
 	heap_t* heap;
 	queue_t* file_queue;
 	thread_t* file_thread;
+	queue_t* compressed_file_queue;
+	thread_t* compressed_file_thread;
 } fs_t;
 
 typedef enum fs_work_op_t
@@ -43,7 +47,9 @@ fs_t* fs_create(heap_t* heap, int queue_capacity)
 	fs_t* fs = heap_alloc(heap, sizeof(fs_t), 8);
 	fs->heap = heap;
 	fs->file_queue = queue_create(heap, queue_capacity);
+	fs->compressed_file_queue = queue_create(heap, queue_capacity);
 	fs->file_thread = thread_create(file_thread_func, fs);
+	fs->compressed_file_thread = thread_create(file_thread_func, fs);
 	return fs;
 }
 
@@ -86,7 +92,11 @@ fs_work_t* fs_write(fs_t* fs, const char* path, const void* buffer, size_t size,
 
 	if (use_compression)
 	{
-		// HOMEWORK 2: Queue file write work on compression queue!
+		char dest[10000];
+		int compressed_size = LZ4_compress_default(work->buffer, dest, (int) work->size, sizeof(dest));
+		work->buffer = dest;
+		//work->size = compressed_size;
+		queue_push(fs->compressed_file_queue, work);
 	}
 	else
 	{
@@ -181,7 +191,11 @@ static void file_read(fs_work_t* work)
 
 	if (work->use_compression)
 	{
-		// HOMEWORK 2: Queue file read work on decompression queue!
+		char result[10000];
+		int decompressed_size = LZ4_decompress_safe(work->buffer, result, (int)work->size, sizeof(result));
+		work->buffer = result;
+		work->size = decompressed_size;
+		event_signal(work->done);
 	}
 	else
 	{
