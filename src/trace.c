@@ -19,6 +19,7 @@ typedef struct event_t
 	char ph;
 	int pid;
 	DWORD tid;
+	int ts;
 } event_t;
 
 // The trace struct that stores information for a trace
@@ -64,17 +65,21 @@ void trace_duration_push(trace_t* trace, const char* name)
 	event_t* event = heap_alloc(trace->heap, sizeof(event_t), 8);
 	event->heap = trace->heap;
 	event->name = calloc(strlen(name) + 1, sizeof(char));
+	if (event->name) // Removes the warning
+	{
+		strncpy_s(event->name, strlen(name) + 1, name, strlen(name));
+	}
 	event->ph = 'B';
 	event->pid = 0;
-	strncpy_s(event->name, strlen(name)+1, name, strlen(name));
+	event->ts = timer_object_get_ms(trace->timer);
 	event->tid = GetCurrentThreadId();
 	queue_push(trace->queue, event);
 	
+	// Save the event info to the trace buffer only when capturing
 	if (trace->capture) 
 	{
 		char event_string[128];
-		snprintf(event_string, sizeof(event_string), "\t\t{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":%d,\"tid\":\"%d\",\"ts\":\"%d\"},\n",
-			event->name, event->ph, event->pid, event->tid, timer_object_get_ms(trace->timer));
+		snprintf(event_string, sizeof(event_string), "\t\t{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":%d,\"tid\":\"%d\",\"ts\":\"%d\"},\n", event->name, event->ph, event->pid, event->tid, event->ts);
 		
 		mutex_lock(trace->mutex);
 		strncat_s(trace->buffer, strlen(trace->buffer) + strlen(event_string) + 1, event_string, strlen(event_string));
@@ -89,12 +94,13 @@ void trace_duration_pop(trace_t* trace)
 	// Get the poped event
 	event_t* event = queue_pop(trace->queue);
 	event->ph = 'E';
+	event->ts = timer_object_get_delta_ms(trace->timer);
 
+	// Save the event info to the trace buffer only when capturing
 	if(trace->capture)
 	{
 		char event_string[128];
-		snprintf(event_string, sizeof(event_string), "\t\t{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":%d,\"tid\":\"%d\",\"ts\":\"%d\"},\n",
-			event->name, event->ph, event->pid, event->tid, timer_object_get_ms(trace->timer));
+		snprintf(event_string, sizeof(event_string), "\t\t{\"name\":\"%s\",\"ph\":\"%c\",\"pid\":%d,\"tid\":\"%d\",\"ts\":\"%d\"},\n", event->name, event->ph, event->pid, event->tid, event->ts);
 		
 		mutex_lock(trace->mutex);
 		strncat_s(trace->buffer, trace->event_capacity * 256, event_string, strlen(event_string));
@@ -108,8 +114,12 @@ void trace_duration_pop(trace_t* trace)
 void trace_capture_start(trace_t* trace, const char* path)
 {
 	trace->path = calloc(strlen(path) + 1, sizeof(char));
-	strncpy_s(trace->path, strlen(path)+1, path, strlen(path));
+	if (trace->path) // Removes the warning
+	{
+		strncpy_s(trace->path, strlen(path) + 1, path, strlen(path));
+	}
 	char* start_string = "{\n\t\"displayTimeUnit\": \"ns\", \"traceEvents\": [\n";
+	
 	mutex_lock(trace->mutex);
 	strncat_s(trace->buffer, strlen(trace->buffer) + strlen(start_string) + 1, start_string, strlen(start_string));
 	mutex_unlock(trace->mutex);
@@ -127,7 +137,6 @@ void trace_capture_stop(trace_t* trace)
 	wchar_t wide_path[1024];
 	if (MultiByteToWideChar(CP_UTF8, 0, trace->path, -1, wide_path, sizeof(wide_path)) <= 0)
 	{
-		perror("Invalid file path");
 		return;
 	}
 
@@ -135,14 +144,12 @@ void trace_capture_stop(trace_t* trace)
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (handle == INVALID_HANDLE_VALUE)
 	{
-		perror("Failed to create the trace file");
 		return;
 	}
 
 	DWORD bytes_written = 0;
 	if (!WriteFile(handle, trace->buffer, (DWORD)strlen(trace->buffer), NULL, NULL))
 	{
-		perror("Failed to wirte the trace file");
 		return;
 	}
 																											
