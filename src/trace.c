@@ -26,23 +26,23 @@ typedef struct trace_t
 {
 	heap_t* heap;
 	queue_t* queue;
-	timer_object_t* timer;
 	mutex_t* mutex;
-	char* buffer;
-	char* path;
 	size_t event_capacity;
+	timer_object_t* timer;
+	char* path;
+	char* buffer;
 	bool capture;
 } trace_t;
 
 trace_t* trace_create(heap_t* heap, int event_capacity)
 {
-	trace_t* trace = heap_alloc(heap, sizeof(trace), 8);
+	trace_t* trace = heap_alloc(heap, sizeof(trace_t), 8);
 	trace->heap = heap;
 	trace->queue = queue_create(heap, event_capacity);
-	trace->timer = timer_object_create(heap, NULL);
 	trace->mutex = mutex_create(heap);
-	trace->buffer = calloc(trace->event_capacity * 128, sizeof(char));
 	trace->event_capacity = (size_t)event_capacity;
+	trace->timer = timer_object_create(heap, NULL);
+	trace->buffer = calloc(trace->event_capacity * 256, sizeof(char));
 	trace->capture = false;
 	return trace;
 }
@@ -60,7 +60,6 @@ void trace_destroy(trace_t* trace)
 void trace_duration_push(trace_t* trace, const char* name)
 {
 	timer_object_update(trace->timer);
-
 	// Create a start event with corresponding name
 	event_t* event = heap_alloc(trace->heap, sizeof(event_t), 8);
 	event->heap = trace->heap;
@@ -98,7 +97,7 @@ void trace_duration_pop(trace_t* trace)
 			event->name, event->ph, event->pid, event->tid, timer_object_get_ms(trace->timer));
 		
 		mutex_lock(trace->mutex);
-		strncat_s(trace->buffer, trace->event_capacity * 128, event_string, strlen(event_string));
+		strncat_s(trace->buffer, trace->event_capacity * 256, event_string, strlen(event_string));
 		mutex_unlock(trace->mutex);
 	}
 
