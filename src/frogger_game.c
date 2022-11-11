@@ -291,7 +291,7 @@ static void update_players(frogger_game_t* game)
 				move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_up(), player_comp->speed*dt));
 				if (transform_comp->transform.translation.z > 15.0f)
 				{
-					move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_up(), -30.0f));
+					transform_comp->transform.translation.z = -15.0f;
 				}
 			}
 			if (key_mask & k_key_down)
@@ -325,12 +325,11 @@ static void update_players(frogger_game_t* game)
 				{
 					if (transform_comp->transform.translation.z > other_transform_comp->transform.translation.z-2.0f 
 						&& transform_comp->transform.translation.z < other_transform_comp->transform.translation.z+2.0f
-						&& transform_comp->transform.translation.y > other_transform_comp->transform.translation.y - other_transform_comp->transform.scale.y
-						&& transform_comp->transform.translation.y < other_transform_comp->transform.translation.y + other_transform_comp->transform.scale.y
+						&& transform_comp->transform.translation.y > other_transform_comp->transform.translation.y - 2.0f - (other_transform_comp->transform.scale.y-1)
+						&& transform_comp->transform.translation.y < other_transform_comp->transform.translation.y + 2.0f + (other_transform_comp->transform.scale.y-1)
 						)
 					{
-						move.translation = vec3f_sub(move.translation, vec3f_scale(vec3f_up(), -transform_comp->transform.translation.z-2.0f));
-						transform_multiply(&transform_comp->transform, &move);
+						transform_comp->transform.translation.z = -15.0f;
 					}
 				}
 			}
