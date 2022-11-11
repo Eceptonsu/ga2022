@@ -26,7 +26,10 @@ int main(int argc, const char* argv[])
 	}
 	net_t* net = net_create(heap, port);
 
-	frogger_game_t* game = frogger_game_create(heap, fs, window, render, 1);
+	/* The last argument is the difficulty, where the game will change in repsonse to different numbers
+	*  It is a number between 1 and 4 (4 is almost impossible)
+	*/
+	frogger_game_t* game = frogger_game_create(heap, fs, window, render, 2);
 
 	while (!wm_pump(window))
 	{

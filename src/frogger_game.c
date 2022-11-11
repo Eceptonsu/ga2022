@@ -79,7 +79,7 @@ static void draw_models(frogger_game_t* game);
 
 frogger_game_t* frogger_game_create(heap_t* heap, fs_t* fs, wm_window_t* window, render_t* render, int difficulty)
 {
-	if (difficulty <= 0 || difficulty > 3) 
+	if (difficulty <= 0 || difficulty > 4) 
 	{
 		printf("INVALID DIFFICULTY!\nThe difficulties avaliable are 1, 2, 3");
 		return NULL;
