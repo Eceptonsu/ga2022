@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -155,6 +155,7 @@
     <ClCompile Include="debug.c" />
     <ClCompile Include="ecs.c" />
     <ClCompile Include="event.c" />
+    <ClCompile Include="frogger_game.c" />
     <ClCompile Include="fs.c" />
     <ClCompile Include="gpu.c" />
     <ClCompile Include="heap.c" />
@@ -183,6 +184,7 @@
     <ClInclude Include="debug.h" />
     <ClInclude Include="ecs.h" />
     <ClInclude Include="event.h" />
+    <ClInclude Include="frogger_game.h" />
     <ClInclude Include="fs.h" />
     <ClInclude Include="gpu.h" />
     <ClInclude Include="heap.h" />
@@ -225,16 +227,20 @@
     <ClInclude Include="wm.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="shaders\triangle.frag">
+    <CustomBuild Include="shaders\greenCube.frag">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vulkan\glslc.exe -c "%(FullPath)" -o "%(FullPath).spv"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
-    <CustomBuild Include="shaders\triangle.vert">
+    <CustomBuild Include="shaders\greenCube.vert">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">vulkan\glslc.exe -c "%(FullPath)" -o "%(FullPath).spv"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\randomCube.frag" />
+    <None Include="shaders\randomCube.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

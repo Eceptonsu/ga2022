@@ -219,6 +219,30 @@ void mat4f_make_perspective(mat4f_t* m, float angle, float aspect, float z_near,
 	m->data[3][3] = 0.0f;
 }
 
+void mat4f_make_ortho(mat4f_t* m, float b, float t, float l, const float r, const float n, const float f)
+{
+	// set OpenGL perspective projection matrix
+	m->data[0][0] = 2 / (r - l);
+	m->data[0][1] = 0;
+	m->data[0][2] = 0;
+	m->data[0][3] = 0;
+
+	m->data[1][0] = 0;
+	m->data[1][1] = 2 / (t - b);
+	m->data[1][2] = 0;
+	m->data[1][3] = 0;
+
+	m->data[2][0] = 0;
+	m->data[2][1] = 0;
+	m->data[2][2] = -2 / (f - n);
+	m->data[2][3] = 0;
+
+	m->data[3][0] = -(r + l) / (r - l);
+	m->data[3][1] = -(t + b) / (t - b);
+	m->data[3][2] = -(f + n) / (f - n);
+	m->data[3][3] = 1;
+}
+
 void mat4f_make_lookat(mat4f_t* m, const vec3f_t* eye, const vec3f_t* dir, const vec3f_t* up)
 {
 	vec3f_t z_vec = vec3f_negate(vec3f_norm(*dir));

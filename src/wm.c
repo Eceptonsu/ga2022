@@ -131,12 +131,11 @@ wm_window_t* wm_create(heap_t* heap)
 		.lpszClassName = L"ga2022 window class",
 	};
 	RegisterClass(&wc);
-
 	HWND hwnd = CreateWindowEx(
 		0,
 		wc.lpszClassName,
 		L"GA 2022",
-		WS_OVERLAPPEDWINDOW,
+		WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU, // Expanding the window will crash the game
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
