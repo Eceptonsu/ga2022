@@ -1,11 +1,12 @@
 #include "debug.h"
 #include "fs.h"
 #include "heap.h"
-#include "net.h"
 #include "render.h"
 #include "frogger_game.h"
 #include "timer.h"
 #include "wm.h"
+
+#include "cpp_test.h"
 
 int main(int argc, const char* argv[])
 {
@@ -13,6 +14,8 @@ int main(int argc, const char* argv[])
 	debug_install_exception_handler();
 
 	timer_startup();
+
+	cpp_test_function(42);
 
 	heap_t* heap = heap_create(2 * 1024 * 1024);
 	fs_t* fs = fs_create(heap, 8);
@@ -42,7 +45,6 @@ int main(int argc, const char* argv[])
 
 	frogger_game_destroy(game);
 
-	net_destroy(net);
 	wm_destroy(window);
 	fs_destroy(fs);
 	heap_destroy(heap);
