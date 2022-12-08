@@ -110,7 +110,7 @@ gpu_t* gpu_create(heap_t* heap, wm_window_t* window)
 	gpu_t* gpu = heap_alloc(heap, sizeof(gpu_t), 8);
 	memset(gpu, 0, sizeof(*gpu));
 	gpu->heap = heap;
-
+		 
 	//////////////////////////////////////////////////////
 	// Create VkInstance
 	//////////////////////////////////////////////////////

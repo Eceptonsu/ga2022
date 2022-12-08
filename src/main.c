@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <assert.h>
+
 #include "debug.h"
 #include "fs.h"
 #include "heap.h"
@@ -5,49 +8,117 @@
 #include "frogger_game.h"
 #include "timer.h"
 #include "wm.h"
+#include "imguiWindow.h"
 
-#include "cpp_test.h"
+typedef struct imgui_info_t
+{
+    SDL_Window* window;
+    ImGui_ImplVulkanH_Window* wd;
+    ImVec4 clearColor;
+
+    // Program specific data
+    bool orthoView;
+    bool perspView;
+    float viewDistance;
+    float horizontalPan;
+    float verticalPan;
+    float viewDistanceP;
+    float horizontalPanP;
+    float verticalPanP;
+    float yaw;
+    float pitch;
+    float roll;
+
+    int difficulty;
+    float playerSpeed;
+    ImVec4 playerColor;
+
+    bool update;
+    bool quit;
+} imgui_info_t;
+
+typedef struct engine_info_t
+{
+    bool orthoView;
+    float viewDistance;
+    float horizontalPan;
+    float verticalPan;
+    float viewDistanceP;
+    float horizontalPanP;
+    float verticalPanP;
+    float yaw;
+    float pitch;
+    float roll;
+
+    int difficulty;
+    float playerSpeed;
+    ImVec4 playerColor;
+} engine_info_t;
+
+// May seem unnecessary currently
+// Needed if data type become complicated
+void dataTransfer(imgui_info_t* imgui_info, engine_info_t* engine_info)
+{
+    engine_info->orthoView = imgui_info->orthoView;
+    engine_info->viewDistance = imgui_info->viewDistance;
+    engine_info->viewDistanceP = imgui_info->viewDistanceP;
+    engine_info->horizontalPan = imgui_info->horizontalPan;
+    engine_info->horizontalPanP = imgui_info->horizontalPanP;
+    engine_info->verticalPan = imgui_info->verticalPan;
+    engine_info->verticalPanP = imgui_info->verticalPanP;
+    engine_info->yaw = imgui_info->yaw;
+    engine_info->pitch = imgui_info->pitch;
+    engine_info->roll = imgui_info->roll;
+    engine_info->difficulty = imgui_info->difficulty;
+    engine_info->playerSpeed = imgui_info->playerSpeed;
+    engine_info->playerColor = imgui_info->playerColor;
+}
 
 int main(int argc, const char* argv[])
 {
-	debug_set_print_mask(k_print_info | k_print_warning | k_print_error);
-	debug_install_exception_handler();
+    debug_set_print_mask(k_print_info | k_print_warning | k_print_error);
+    debug_install_exception_handler();
 
-	timer_startup();
+    timer_startup();
 
-	cpp_test_function(42);
+    heap_t* heap = heap_create(2 * 1024 * 1024);
+    fs_t* fs = fs_create(heap, 8);
+    wm_window_t* window = wm_create(heap);
+    render_t* render = render_create(heap, window);
+    imgui_info_t* imgui_info = SetUpImgui(heap);
 
-	heap_t* heap = heap_create(2 * 1024 * 1024);
-	fs_t* fs = fs_create(heap, 8);
-	wm_window_t* window = wm_create(heap);
-	render_t* render = render_create(heap, window);
+    frogger_game_t* game = frogger_game_create(heap, fs, window, render, 2);
+    engine_info_t* engine_info = heap_alloc(heap, sizeof(engine_info_t), 8);
 
-	int port = 12345;
-	if (argc >= 2)
-	{
-		port = atoi(argv[1]);
-	}
-	net_t* net = net_create(heap, port);
+    // The while loop handles two windows
+    // Tried to put everything in onw window but imgui_impl_win32.cpp and the generated cimgui_impl.c does not work
+    while (!wm_pump(window))
+    {
+        if (imgui_info->quit)
+            break;
 
-	/* The last argument is the difficulty, where the game will change in repsonse to different numbers
-	*  It is a number between 1 and 4 (4 is almost impossible)
-	*/
-	frogger_game_t* game = frogger_game_create(heap, fs, window, render, 2);
+        if (imgui_info->update) 
+        {
+            printf("GAME UPDATE!\n");
+            imgui_info->update = false;
+            frogger_game_destroy(game);
+            game = frogger_game_create(heap, fs, window, render, imgui_info->difficulty);
+        }
 
-	while (!wm_pump(window))
-	{
-		net_update(net);
-		frogger_game_update(game);
-	}
+        DrawImgui(imgui_info);
+        frogger_game_update(game, engine_info);
+        dataTransfer(imgui_info, engine_info);
+    }
 
-	/* XXX: Shutdown render before the game. Render uses game resources. */
-	render_destroy(render);
+    /* XXX: Shutdown render before the game. Render uses game resources. */
+    render_destroy(render);
 
-	frogger_game_destroy(game);
+    frogger_game_destroy(game);
+    DestoryImgui(imgui_info);
 
-	wm_destroy(window);
-	fs_destroy(fs);
-	heap_destroy(heap);
-
-	return 0;
+    wm_destroy(window);
+    fs_destroy(fs);
+    heap_destroy(heap);
+    
+    return 0;
 }

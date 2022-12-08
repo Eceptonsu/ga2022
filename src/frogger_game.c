@@ -1,3 +1,5 @@
+#pragma once
+#include <stdio.h>
 #include "ecs.h"
 #include "fs.h"
 #include "gpu.h"
@@ -70,16 +72,40 @@ typedef struct frogger_game_t
 	fs_work_t* fragment_shader_work;
 } frogger_game_t;
 
+typedef struct ImVec4
+{
+	float x, y, z, w;
+} ImVec4;
+
+typedef struct engine_info_t
+{
+	bool orthoView;
+	float viewDistance;
+	float horizontalPan;
+	float verticalPan;
+	float viewDistanceP;
+	float horizontalPanP;
+	float verticalPanP;
+	float yaw;
+	float pitch;
+	float roll;
+
+	int difficulty;
+	float playerSpeed;
+	ImVec4 playerColor;
+} engine_info_t;
+
 static void load_resources(frogger_game_t* game);
 static void unload_resources(frogger_game_t* game);
 static void spawn_player(frogger_game_t* game, int index);
 static void spawn_camera(frogger_game_t* game);
-static void update_players(frogger_game_t* game);
-static void draw_models(frogger_game_t* game);
+static void update_players(frogger_game_t* game, engine_info_t* engine_info);
+static void update_camera(frogger_game_t* game, engine_info_t* engine_info);
+static void draw_models(frogger_game_t* game, engine_info_t* engine_info);
 
 frogger_game_t* frogger_game_create(heap_t* heap, fs_t* fs, wm_window_t* window, render_t* render, int difficulty)
 {
-	if (difficulty <= 0 || difficulty > 4) 
+	if (difficulty <= 0 || difficulty > 5) 
 	{
 		printf("INVALID DIFFICULTY!\nThe difficulties avaliable are 1, 2, 3");
 		return NULL;
@@ -125,12 +151,13 @@ void frogger_game_destroy(frogger_game_t* game)
 	heap_free(game->heap, game);
 }
 
-void frogger_game_update(frogger_game_t* game)
+void frogger_game_update(frogger_game_t* game, engine_info_t* engine_info)
 {
 	timer_object_update(game->timer);
 	ecs_update(game->ecs);
-	update_players(game);
-	draw_models(game);
+	update_players(game, engine_info);
+	update_camera(game, engine_info);
+	draw_models(game, engine_info);
 	render_push_done(game->render);
 }
 
@@ -254,18 +281,9 @@ static void spawn_camera(frogger_game_t* game)
 	strcpy_s(name_comp->name, sizeof(name_comp->name), "camera");
 
 	camera_component_t* camera_comp = ecs_entity_get_component(game->ecs, game->camera_ent, game->camera_type, true);
-
-	float view_distance = 30.0f;
-
-	mat4f_make_ortho(&camera_comp->projection, 9.0f / 16.0f * view_distance, -9.0f / 16.0f * view_distance, -view_distance, view_distance, -1000.0f, 1000.0f);
-
-	vec3f_t eye_pos = vec3f_scale(vec3f_forward(), -5.0f);
-	vec3f_t forward = vec3f_forward();
-	vec3f_t up = vec3f_up();
-	mat4f_make_lookat(&camera_comp->view, &eye_pos, &forward, &up);
 }
 
-static void update_players(frogger_game_t* game)
+static void update_players(frogger_game_t* game, engine_info_t* engine_info)
 {
 	float dt = (float)timer_object_get_delta_ms(game->timer) * 0.001f;
 
@@ -288,7 +306,7 @@ static void update_players(frogger_game_t* game)
 
 			if (key_mask & k_key_up)
 			{
-				move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_up(), player_comp->speed*dt));
+				move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_up(), engine_info->playerSpeed*dt));
 				if (transform_comp->transform.translation.z > 15.0f)
 				{
 					transform_comp->transform.translation.z = -15.0f;
@@ -298,16 +316,16 @@ static void update_players(frogger_game_t* game)
 			{
 				if (transform_comp->transform.translation.z > -15.0f)
 				{
-					move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_up(), -player_comp->speed*dt));
+					move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_up(), -engine_info->playerSpeed*dt));
 				}
 			}
 			if (key_mask & k_key_left)
 			{
-				move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_right(), -player_comp->speed*dt));
+				move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_right(), -engine_info->playerSpeed*dt));
 			}
 			if (key_mask & k_key_right)
 			{
-				move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_right(), player_comp->speed*dt));
+				move.translation = vec3f_add(move.translation, vec3f_scale(vec3f_right(), engine_info->playerSpeed*dt));
 			}
 
 			transform_multiply(&transform_comp->transform, &move);
@@ -350,7 +368,49 @@ static void update_players(frogger_game_t* game)
 	}
 }
 
-static void draw_models(frogger_game_t* game)
+static void update_camera(frogger_game_t* game, engine_info_t* engine_info)
+{
+	uint64_t k_camera_query_mask = (1ULL << game->camera_type);
+	for (ecs_query_t camera_query = ecs_query_create(game->ecs, k_camera_query_mask);
+		ecs_query_is_valid(game->ecs, &camera_query);
+		ecs_query_next(game->ecs, &camera_query))
+	{
+		camera_component_t* camera_comp = ecs_query_get_component(game->ecs, &camera_query, game->camera_type);
+
+		if (engine_info->orthoView)
+		{
+			mat4f_make_ortho(&camera_comp->projection, 9.0f / 16.0f * engine_info->viewDistance, -9.0f / 16.0f * engine_info->viewDistance, -engine_info->viewDistance, engine_info->viewDistance, -1000.0f, 1000.0f);
+
+			vec3f_t eye_pos = vec3f_add(vec3f_scale(vec3f_y(), -engine_info->horizontalPan),
+										vec3f_scale(vec3f_z(), -engine_info->verticalPan));
+			vec3f_t forward = vec3f_forward();
+			vec3f_t up = vec3f_up();
+
+			mat4f_make_lookat(&camera_comp->view, &eye_pos, &forward, &up);
+		}
+		else
+		{
+			mat4f_make_perspective(&camera_comp->projection, (float)M_PI / 2.0f, 16.0f / 9.0f, 0.1f, 100.0f);
+
+			vec3f_t eye_pos = vec3f_add((vec3f_add(vec3f_scale(vec3f_forward(), engine_info->viewDistanceP), 
+										 vec3f_scale(vec3f_y(), engine_info->horizontalPanP))),
+										 vec3f_scale(vec3f_z(), engine_info->verticalPanP));
+			vec3f_t up = vec3f_scale(vec3f_up(), -1.0f);
+
+			// Update the "front" vector based on yaw and pitch
+			// TODO: need to consider roll
+			float fx = (float) (cos(engine_info->yaw * M_PI/180.0f) * cos(engine_info->pitch * M_PI/180.0f));
+			float fy = (float) (sin(engine_info->pitch * M_PI/180.0f));
+			float fz = (float) (sin(engine_info->yaw * M_PI/180.0f) * cos(engine_info->pitch * M_PI/180.0f));
+			vec3f_t forward = vec3f_add((vec3f_add(vec3f_scale(vec3f_forward(), -fx),
+								   vec3f_scale(vec3f_y(), fy))),
+				                   vec3f_scale(vec3f_z(), fz));
+			mat4f_make_lookat(&camera_comp->view, &eye_pos, &forward, &up);
+		}
+	}
+}
+
+static void draw_models(frogger_game_t* game, engine_info_t* engine_info)
 {
 	uint64_t k_camera_query_mask = (1ULL << game->camera_type);
 	for (ecs_query_t camera_query = ecs_query_create(game->ecs, k_camera_query_mask);
@@ -373,9 +433,11 @@ static void draw_models(frogger_game_t* game)
 				mat4f_t projection;
 				mat4f_t model;
 				mat4f_t view;
+				ImVec4 color;
 			} uniform_data;
 			uniform_data.projection = camera_comp->projection;
 			uniform_data.view = camera_comp->view;
+			uniform_data.color = engine_info->playerColor;
 			transform_to_matrix(&transform_comp->transform, &uniform_data.model);
 			gpu_uniform_buffer_info_t uniform_info = { .data = &uniform_data, sizeof(uniform_data) };
 

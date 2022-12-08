@@ -82,34 +82,8 @@ static LRESULT CALLBACK _window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			win->mouse_mask &= ~k_mouse_button_middle;
 			break;
 
-		case WM_MOUSEMOVE:
-			if (win->has_focus)
-			{
-				// Relative mouse movement in four steps:
-				// 1. Get current mouse position (old_cursor).
-				// 2. Move mouse back to center of window.
-				// 3. Get current mouse position (new_cursor).
-				// 4. Compute relative movement (old_cursor - new_cursor).
-
-				POINT old_cursor;
-				GetCursorPos(&old_cursor);
-
-				RECT window_rect;
-				GetWindowRect(hwnd, &window_rect);
-				SetCursorPos(
-					(window_rect.left + window_rect.right) / 2,
-					(window_rect.top + window_rect.bottom) / 2);
-
-				POINT new_cursor;
-				GetCursorPos(&new_cursor);
-
-				win->mouse_x = old_cursor.x - new_cursor.x;
-				win->mouse_y = old_cursor.y - new_cursor.y;
-			}
-			break;
-
 		case WM_ACTIVATEAPP:
-			ShowCursor(!wParam);
+			ShowCursor(true);
 			win->has_focus = wParam;
 			break;
 

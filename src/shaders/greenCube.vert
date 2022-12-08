@@ -8,9 +8,10 @@ layout (binding = 0) uniform UBO
 	mat4 projectionMatrix;
 	mat4 modelMatrix;
 	mat4 viewMatrix;
+	vec4 color;
 } ubo;
 
-layout (location = 0) out vec3 outColor;
+layout (location = 0) out vec4 outColor;
 
 out gl_PerVertex
 {
@@ -19,6 +20,6 @@ out gl_PerVertex
 
 void main()
 {
-	outColor = inColor;
+	outColor = ubo.color;
 	gl_Position = ubo.projectionMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(inPos.xyz, 1.0);
 }

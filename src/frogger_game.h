@@ -9,6 +9,7 @@ typedef struct fs_t fs_t;
 typedef struct heap_t heap_t;
 typedef struct render_t render_t;
 typedef struct wm_window_t wm_window_t;
+typedef struct engine_info_t engine_info_t;
 
 // Create an instance of simple test game.
 frogger_game_t* frogger_game_create(heap_t* heap, fs_t* fs, wm_window_t* window, render_t* render, int difficulty);
@@ -17,4 +18,4 @@ frogger_game_t* frogger_game_create(heap_t* heap, fs_t* fs, wm_window_t* window,
 void frogger_game_destroy(frogger_game_t* game);
 
 // Per-frame update for our simple test game.
-void frogger_game_update(frogger_game_t* game);
+void frogger_game_update(frogger_game_t* game, engine_info_t* engine_info);
