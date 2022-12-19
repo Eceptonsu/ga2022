@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#define _USE_MATH_DEFINES
 #include "math.h"
 
 typedef struct vec3f_t
@@ -184,4 +185,28 @@ __forceinline vec3f_t vec3f_cross(vec3f_t a, vec3f_t b)
 		.y = a.z * b.x - a.x * b.z,
 		.z = a.x * b.y - a.y * b.x,
 	};
+}
+
+__forceinline vec3f_t vec3f_forward_euler(float yaw, float pitch, float roll) 
+{
+	float fx = (float)(cos(-yaw * M_PI / 180.0f) * cos(-pitch * M_PI / 180.0f));
+	float fy = (float)(sin(-pitch * M_PI / 180.0f));
+	float fz = (float)(sin(-yaw * M_PI / 180.0f) * cos(-pitch * M_PI / 180.0f));
+	vec3f_t forward = vec3f_add((vec3f_add(vec3f_scale(vec3f_forward(), -fx),
+		vec3f_scale(vec3f_y(), fy))),
+		vec3f_scale(vec3f_z(), fz));
+
+	return forward;
+}
+
+__forceinline vec3f_t vec3f_up_euler(float yaw, float pitch, float roll)
+{
+	float fx = (float)(sin(-roll * M_PI / 180.0f) * sin(-pitch * M_PI / 180.0f) * cos(-yaw * M_PI / 180.0f) - cos(-roll * M_PI / 180.0f) * sin(-yaw * M_PI / 180.0f));
+	float fy = (float)(cos(-pitch * M_PI / 180.0f) * sin(-roll * M_PI / 180.0f));
+	float fz = (float)(sin(-roll * M_PI / 180.0f) * sin(-pitch * M_PI / 180.0f) * sin(-yaw * M_PI / 180.0f) + cos(-roll * M_PI / 180.0f) * cos(-yaw * M_PI / 180.0f));
+	vec3f_t up = vec3f_add((vec3f_add(vec3f_scale(vec3f_forward(), -fx),
+							vec3f_scale(vec3f_y(), -fy))),
+							vec3f_scale(vec3f_z(), -fz));
+
+	return up;
 }

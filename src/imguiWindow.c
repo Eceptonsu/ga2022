@@ -488,9 +488,9 @@ void DrawImgui(imgui_info_t* imgui_info)
             igSliderFloat("View Distance Persp", &(imgui_info->viewDistanceP), 20.0f, 50.0f, "%.5f", 0);
             igSliderFloat("Horizontal Pan Persp", &(imgui_info->horizontalPanP), -25.0f, 25.0f, "%.5f", 0);
             igSliderFloat("Vertical Pan Persp", &(imgui_info->verticalPanP), -15.0f, 15.0f, "%.5f", 0);
-            igSliderFloat("Yaw", &(imgui_info->yaw), -90.0f, 90.0f, "%.5f", 0);
-            igSliderFloat("Pitch", &(imgui_info->pitch), -90.0f, 90.0f, "%.5f", 0);
-            igSliderFloat("Roll", &(imgui_info->roll), -90.0f, 90.0f, "%.5f", 0);
+            igSliderFloat("Yaw", &(imgui_info->yaw), -44.5f, 44.5f, "%.5f", 0);
+            igSliderFloat("Pitch", &(imgui_info->pitch), -44.5f, 44.5f, "%.5f", 0);
+            igSliderFloat("Roll", &(imgui_info->roll), -44.5f, 44.5f, "%.5f", 0);
 
         }
         igNewLine();

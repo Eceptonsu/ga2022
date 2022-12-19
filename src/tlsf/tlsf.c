@@ -925,8 +925,6 @@ static void leak_callstack_walker(void* ptr, size_t size, int used, void* user)
 {
 	(void)user;
 	if (used) {
-		printf("\nMemory leak of size %d bytes with callstack:\n", (unsigned int)size);
-
 		void* stack[100];
 		unsigned short frames;
 		HANDLE process;
@@ -950,7 +948,6 @@ static void leak_callstack_walker(void* ptr, size_t size, int used, void* user)
 
 				SymGetLineFromAddr64(process, (DWORD64)(stack[i]), &displacement, line); // responsible for line number and file name
 				SymGetSymFromAddr64(process, (DWORD64)(stack[i]), 0, symbol); // responsible for the function name
-				printf("[%i] line %i in %s located at %s\n", frames - i - 1, line->LineNumber, symbol->Name, line->FileName);
 			}
 		}
 

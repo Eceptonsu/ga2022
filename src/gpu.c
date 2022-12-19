@@ -1372,7 +1372,7 @@ void gpu_cmd_draw(gpu_t* gpu, gpu_cmd_buffer_t* cmd_buffer)
 	if (cmd_buffer->index_count)
 	{
 		vkCmdDrawIndexed(cmd_buffer->buffer, cmd_buffer->index_count, 1, 0, 0, 0);
-	}
+ 	}
 	else if (cmd_buffer->vertex_count)
 	{
 		vkCmdDraw(cmd_buffer->buffer, cmd_buffer->vertex_count, 1, 0, 0);

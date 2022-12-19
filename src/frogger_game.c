@@ -395,16 +395,10 @@ static void update_camera(frogger_game_t* game, engine_info_t* engine_info)
 			vec3f_t eye_pos = vec3f_add((vec3f_add(vec3f_scale(vec3f_forward(), engine_info->viewDistanceP), 
 										 vec3f_scale(vec3f_y(), engine_info->horizontalPanP))),
 										 vec3f_scale(vec3f_z(), engine_info->verticalPanP));
-			vec3f_t up = vec3f_scale(vec3f_up(), -1.0f);
 
-			// Update the "front" vector based on yaw and pitch
-			// TODO: need to consider roll
-			float fx = (float) (cos(engine_info->yaw * M_PI/180.0f) * cos(engine_info->pitch * M_PI/180.0f));
-			float fy = (float) (sin(engine_info->pitch * M_PI/180.0f));
-			float fz = (float) (sin(engine_info->yaw * M_PI/180.0f) * cos(engine_info->pitch * M_PI/180.0f));
-			vec3f_t forward = vec3f_add((vec3f_add(vec3f_scale(vec3f_forward(), -fx),
-								   vec3f_scale(vec3f_y(), fy))),
-				                   vec3f_scale(vec3f_z(), fz));
+			// Update the "front" and "up" vector based on yaw and pitch and roll
+			vec3f_t forward = vec3f_forward_euler(engine_info->yaw, engine_info->pitch, engine_info->roll);
+			vec3f_t up = vec3f_up_euler(engine_info->yaw, engine_info->pitch, engine_info->roll);
 			mat4f_make_lookat(&camera_comp->view, &eye_pos, &forward, &up);
 		}
 	}
