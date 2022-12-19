@@ -35,11 +35,14 @@ typedef struct imgui_info_t
     float pitch;
     float roll;
 
+    bool bgmusic;
+    int bgmVolume;
     int difficulty;
     float playerSpeed;
     ImVec4 playerColor;
 
     // Game Update
+    bool audioChange;
     bool update;
     bool quit;
 } imgui_info_t;
@@ -407,6 +410,8 @@ imgui_info_t* SetUpImgui(heap_t* heap)
     imgui_info->horizontalPanP = 0.0f;
     imgui_info->verticalPanP = 0.0f;
 
+    imgui_info->bgmusic = true;
+    imgui_info->bgmVolume = SDL_MIX_MAXVOLUME;
     imgui_info->difficulty = 2;
     imgui_info->playerSpeed = 5.0f;
     ImVec4 playerColor;
@@ -416,6 +421,7 @@ imgui_info_t* SetUpImgui(heap_t* heap)
     playerColor.w = 1.0f;
     imgui_info->playerColor = playerColor;
 
+    imgui_info->audioChange = false;
     imgui_info->update = false;
     imgui_info->quit = false;
 
@@ -495,8 +501,21 @@ void DrawImgui(imgui_info_t* imgui_info)
         }
         igNewLine();
 
-        int tempDifficulty = imgui_info->difficulty;
         igText("Frogger Game Settings");
+
+        igCheckbox("Frogger Game BGM", &(imgui_info->bgmusic));
+        if (imgui_info->bgmusic)
+        {
+            int tempVolume = imgui_info->bgmVolume;
+            igSliderInt("Frogger Game BGM Volume", &tempVolume, 0, 128, "%1d", 0);
+            if (tempVolume != imgui_info->bgmVolume)
+            {
+                imgui_info->bgmVolume = tempVolume;
+                imgui_info->audioChange = true;
+            }
+        }
+
+        int tempDifficulty = imgui_info->difficulty;
         igInputInt("Frogger Game Difficulty", &tempDifficulty, 1, 1, 0);
         igTextColored(textColor, "Should be a number between 1 and 5");
         if (tempDifficulty < 1) tempDifficulty = 1;

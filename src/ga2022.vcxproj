@@ -155,6 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="atomic.c" />
+    <ClCompile Include="audio.c" />
     <ClCompile Include="cpp_test.cpp" />
     <ClCompile Include="debug.c" />
     <ClCompile Include="ecs.c" />
@@ -201,6 +202,7 @@
     <ClInclude Include="frogger_game.h" />
     <ClInclude Include="fs.h" />
     <ClInclude Include="gpu.h" />
+    <ClInclude Include="audio.h" />
     <ClInclude Include="heap.h" />
     <ClInclude Include="imguiWindow.h" />
     <ClInclude Include="imgui\imconfig.h" />

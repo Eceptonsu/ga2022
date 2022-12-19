@@ -9,6 +9,7 @@
 #include "timer.h"
 #include "wm.h"
 #include "imguiWindow.h"
+#include "audio.h"
 
 typedef struct imgui_info_t
 {
@@ -29,10 +30,13 @@ typedef struct imgui_info_t
     float pitch;
     float roll;
 
+    bool bgmusic;
+    int bgmVolume;
     int difficulty;
     float playerSpeed;
     ImVec4 playerColor;
 
+    bool audioChange;
     bool update;
     bool quit;
 } imgui_info_t;
@@ -90,13 +94,24 @@ int main(int argc, const char* argv[])
     frogger_game_t* game = frogger_game_create(heap, fs, window, render, 2);
     engine_info_t* engine_info = heap_alloc(heap, sizeof(engine_info_t), 8);
 
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
+        printf("Audio Device Initialization Failed!\n");
+        return 1;
+    }
+    initAudio();
+
+    playMusic("music/main_theme.wav", SDL_MIX_MAXVOLUME);
+
     // The while loop handles two windows
     // Tried to put everything in onw window but imgui_impl_win32.cpp and the generated cimgui_impl.c does not work
     while (!wm_pump(window))
     {
+        // Quit the program
         if (imgui_info->quit)
             break;
 
+        // Update and restart the game
         if (imgui_info->update) 
         {
             printf("GAME UPDATE!\n");
@@ -105,10 +120,29 @@ int main(int argc, const char* argv[])
             game = frogger_game_create(heap, fs, window, render, imgui_info->difficulty);
         }
 
+        // Audio Control
+        if (!imgui_info->bgmusic)
+        {
+            pauseAudio();
+        }
+        else 
+        {
+            unpauseAudio();
+        }
+
+        if (imgui_info->audioChange)
+        {
+            playMusic("music/main_theme.wav", imgui_info->bgmVolume);
+            imgui_info->audioChange = false;
+        }
+
         DrawImgui(imgui_info);
         frogger_game_update(game, engine_info);
         dataTransfer(imgui_info, engine_info);
     }
+
+    endAudio();
+    SDL_Quit();
 
     /* XXX: Shutdown render before the game. Render uses game resources. */
     render_destroy(render);
