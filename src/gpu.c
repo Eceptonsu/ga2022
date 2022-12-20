@@ -1,4 +1,4 @@
-#include "gpu.h"
+  #include "gpu.h"
 
 #include "debug.h"
 #include "heap.h"
@@ -1398,7 +1398,7 @@ static void create_mesh_layouts(gpu_t* gpu)
 		};
 
 		VkVertexInputAttributeDescription* vertex_attributes = heap_alloc(gpu->heap, sizeof(VkVertexInputAttributeDescription) * 1, 8);
-		vertex_attributes[0] = (VkVertexInputAttributeDescription)
+		vertex_attributes[0] = (VkVertexInputAttributeDescription) 
 		{
 			.binding = 0,
 			.location = 0,
@@ -1436,7 +1436,7 @@ static void create_mesh_layouts(gpu_t* gpu)
 			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
 		};
 
-		VkVertexInputAttributeDescription* vertex_attributes = heap_alloc(gpu->heap, sizeof(VkVertexInputAttributeDescription) * 2, 8);
+		VkVertexInputAttributeDescription* vertex_attributes = heap_alloc(gpu->heap, sizeof(VkVertexInputAttributeDescription) * 3, 8);
 		vertex_attributes[0] = (VkVertexInputAttributeDescription)
 		{
 			.binding = 0,
@@ -1450,6 +1450,13 @@ static void create_mesh_layouts(gpu_t* gpu)
 			.location = 1,
 			.format = VK_FORMAT_R32G32B32_SFLOAT,
 			.offset = 12,
+		};
+		vertex_attributes[2] = (VkVertexInputAttributeDescription)
+		{
+			.binding = 0,
+			.location = 2,
+			.format = VK_FORMAT_R32G32B32_SFLOAT,
+			.offset = 24,
 		};
 
 		gpu->mesh_vertex_input_info[k_gpu_mesh_layout_tri_p444_c444_i2] = (VkPipelineVertexInputStateCreateInfo)

@@ -172,6 +172,7 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="lecture7.c" />
+    <ClCompile Include="light.c" />
     <ClCompile Include="lz4\lz4.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="mat4f.c" />
@@ -212,6 +213,7 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="light.h" />
     <ClInclude Include="lz4\lz4.h" />
     <ClInclude Include="mat4f.h" />
     <ClInclude Include="math.h" />
